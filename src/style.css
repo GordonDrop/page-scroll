@@ -1,0 +1,10 @@
+* { box-sizing: border-box; padding: 0; margin: 0; }
+
+body {overflow: hidden; position: relative; height: 100%;}
+
+.page-scroll-container { position: relative; transition: all 1000ms ease;
+  transform: translate3d(0px, 0px, 0px); }
+
+.page-scroll-wrap { height: 100vh; position: relative; color: white;
+  font-size: 60px; text-align: center; vertical-align: middle;
+  line-height: 100vh; overflow: auto; }

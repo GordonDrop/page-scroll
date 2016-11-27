@@ -1,0 +1,24 @@
+{
+  "name": "page-scroll",
+  "description": "Page scoller plugin",
+  "main": "dist/index.js",
+  "authors": [
+    "ksimanov"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "fullpage",
+    "one-page-scroll"
+  ],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.1"
+  }
+}
