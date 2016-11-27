@@ -7,9 +7,12 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <script src="../bower_components/jquery/dist/jquery.js"></script>
-    <srcipt src="../src/page-scroll.js"></srcipt>
+    <script src="../src/page-scroll.js"></script>
     <link rel="stylesheet" href="../src/style.css">
     <style>
+        * { box-sizing: border-box; font-family: Arial; font-size: 60px;
+            color: white; margin: 0; padding: 0; }
+        .page { text-align: center; line-height: 100vh; vertical-align: middle; }
         .one {background-color: tomato; height: 100vh; }
         .two {background-color: blue; height: 200vh; }
         .three {background-color: gray; height: 100vh; }
@@ -34,5 +37,11 @@
             4
         </div>
     </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#page-scroller').pageScroll();
+        })
+    </script>
 </body>
 </html>
