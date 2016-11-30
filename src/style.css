@@ -4,3 +4,9 @@
 .page-scroll-section { position: relative; height: 100%; overflow: auto; }
 
 .page-scroll-inner { min-height: 100%; }
+
+.page-scroll-nav { position: fixed; top: 10px; left: 10px; }
+.page-scroll-nav-item { display: inline-block; margin: 0 10px; }
+.page-scroll-nav-link { display: inline-block; padding: 7px 12px; background-color: rgba(255,255,255,0.5);
+  color: black; font-size: 14px; cursor: pointer; }
+.page-scroll-nav-link.active { background-color: rgba(255,255,255,1);}

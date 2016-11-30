@@ -1,8 +1,17 @@
 ;(function ($, window, document, undefined) {
   'use strict';
 
+  // TODO: - webpack it
+  // TODO: add settings
+
+  var helpers = {
+    isMac: function () {
+      return navigator.platform.toUpperCase().indexOf('MAC')>=0;
+    }
+  };
+
   var pluginName = 'pageScroll',
-    defaults = {};
+      defaults = {};
 
   var WHEEL_EVENTS = [
     'mousewheel.' + pluginName,
@@ -10,7 +19,7 @@
     'MozMousePixelScroll.' + pluginName
   ].join(',');
 
-  var TIMEOUT = 600, SCROLL_DELAY = 600;
+  var ANIMATION_TIMEOUT = 600, SCROLL_DELAY = helpers.isMac() ? 600 : 0;
 
   // The actual plugin constructor
   function Plugin(el, options) {
@@ -29,12 +38,12 @@
   $.extend(Plugin.prototype, {
     init: function () {
       this.activeId = 0;
-      this.activeSectionPosition = 0;
       this.$activeSection = $('[data-section-id="' + this.activeId + '"');
       this.vpHeight = this.$win.height();
-      this.lastAnimationTimeStart = null;
+      this.lastAnimationTimeStart = 0;
 
       this.buildHTML();
+      this.buildNav();
       this.bindEvents();
     },
 
@@ -42,20 +51,21 @@
       var plugin = this;
 
       this.$body.css({
-        'overflow': 'hidden',
-        'height': '100%'
+        'overflow': 'hidden'
       });
 
       this.$el.addClass('page-scroll-container');
-      this.$el.css({ 'transition': 'all ' + TIMEOUT + 'ms ease' });
+      this.$el.css({ 'transition': 'all ' + ANIMATION_TIMEOUT + 'ms ease' });
 
       this.$pages.each(function (i, page) {
-        $(page).attr('data-section-id', i);
+        $(page)
+          .css({'min-height': this.vpHeight})
+          .attr('data-section-id', i);
 
         if ($(page).height() > plugin.vpHeight) {
           $(page).addClass('scrollable');
         }
-      });
+      }.bind(this));
 
       this.$pages
         .wrap('<div class="page-scroll-section">');
@@ -64,23 +74,54 @@
       this.$sections.css({ 'height': this.vpHeight + 'px' });
     },
 
+    buildNav: function () {
+      var plugin = this;
+      this.$nav = $('<ul class="page-scroll-nav">');
+      this.$pages.each(function (i) {
+        var navItem = $('<li class="page-scroll-nav-item">');
+        var navLink = $('<a class="page-scroll-nav-link">');
+        navLink
+          .attr('data-section-id', i)
+          .text('Section ' + ++i);
+
+        navItem.append(navLink);
+        plugin.$nav.append(navItem);
+      });
+
+      this.$nav.find('a').first().addClass('active');
+      this.$body.append(this.$nav);
+    },
+
     bindEvents: function () {
-      this.$doc.on('wheel', this.handler.bind(this));
+      this.$doc.on('wheel', this.scrollHandler.bind(this));
+      this.$nav.find('.page-scroll-nav-link').on('click', this.navHandler.bind(this))
     },
 
     unbindEvents: function () {
       this.$doc.off(WHEEL_EVENTS);
     },
 
-    handler: function (e) {
-      var wheelDelta = e.originalEvent.deltaY;
-      var dir = this.getDirection(wheelDelta);
+    scrollHandler: function (e) {
+      var wheelDelta = e.originalEvent.deltaY,
+          dir = this.getDirection(wheelDelta),
+          idToMove;
 
       if (this.isEdge(dir) || this.animationInProgress()) return;
 
       this.lastAnimationTimeStart = Date.now();
-      this.navigate(dir);
-      this.setActive(dir);
+      idToMove = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
+      this.moveTo(idToMove);
+    },
+
+    navHandler: function (e) {
+      if (!$(e.target).is('a')) return;
+
+      e.preventDefault();
+      var id = parseInt($(e.target).attr('data-section-id'));
+      this.moveTo(id);
+
+      this.$nav.find('.active').removeClass('active');
+      this.$activeSection.addClass('active');
     },
 
     getDirection: function (wheelDelta) {
@@ -88,30 +129,22 @@
       if (wheelDelta < 0) return 'up';
     },
 
-    navigate: function (dir) {
-      this.activeSectionPosition = dir === 'down' ? (
-        this.activeSectionPosition + this.vpHeight
-      ) : (
-        this.activeSectionPosition - this.vpHeight
-      );
+    moveTo: function (id) {
+      this.activeId = id;
+      this.$activeSection = $('[data-section-id="' + this.activeId + '"]');
 
+      var newPosition = this.vpHeight * this.activeId;
       this.$el.css({
-        'transform': 'translate3d(0px, -' + this.activeSectionPosition + 'px, 0px)'
+        'transform': 'translate3d(0px, -' + newPosition + 'px, 0px)'
       });
-    },
 
-    setActive: function (dir) {
-      dir === 'down' ? (
-        this.activeId++
-      ) : (
-        this.activeId--
-      );
+      this.$nav.find('.active').removeClass('active');
+      this.$activeSection.addClass('active');
     },
 
     animationInProgress: function () {
       // WORKAROUND: SCROLL_DELAY added to prevent double scroll on mac trackpads
-      return !this.lastAnimationTimeStart ||
-             (Date.now() - this.lastAnimationTimeStart) <= TIMEOUT + SCROLL_DELAY;
+      return (Date.now() - this.lastAnimationTimeStart) <= ANIMATION_TIMEOUT + SCROLL_DELAY;
     },
 
     isEdge: function (dir) {
