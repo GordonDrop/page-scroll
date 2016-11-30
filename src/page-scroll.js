@@ -10,7 +10,7 @@
     'MozMousePixelScroll.' + pluginName
   ].join(',');
 
-  var TIMEOUT = 1000;
+  var TIMEOUT = 600, SCROLL_DELAY = 600;
 
   // The actual plugin constructor
   function Plugin(el, options) {
@@ -32,6 +32,7 @@
       this.activeSectionPosition = 0;
       this.$activeSection = $('[data-section-id="' + this.activeId + '"');
       this.vpHeight = this.$win.height();
+      this.lastAnimationTimeStart = null;
 
       this.buildHTML();
       this.bindEvents();
@@ -64,36 +65,27 @@
     },
 
     bindEvents: function () {
-      this.$doc.on(WHEEL_EVENTS, this.handler.bind(this));
+      this.$doc.on('wheel', this.handler.bind(this));
     },
 
-    unbindEvent: function () {
+    unbindEvents: function () {
       this.$doc.off(WHEEL_EVENTS);
     },
 
     handler: function (e) {
-      var wheelDelta = e.originalEvent.deltaY || e.originalEvent.detail || e.originalEvent.wheelDelta;
+      var wheelDelta = e.originalEvent.deltaY;
       var dir = this.getDirection(wheelDelta);
 
-      if (this.isStartOrEnd(dir)) {
-        return;
-      }
+      if (this.isEdge(dir) || this.animationInProgress()) return;
 
+      this.lastAnimationTimeStart = Date.now();
       this.navigate(dir);
       this.setActive(dir);
-
-      // WAIT FOR ANIMATION
-      this.unbindEvent();
-      setTimeout(this.bindEvents.bind(this), TIMEOUT);
-      console.log(e, wheelDelta);
     },
 
     getDirection: function (wheelDelta) {
-      if (wheelDelta > 0){
-        return 'down'
-      } else {
-        return 'up'
-      }
+      if (wheelDelta > 0) return 'down';
+      if (wheelDelta < 0) return 'up';
     },
 
     navigate: function (dir) {
@@ -116,10 +108,15 @@
       );
     },
 
-    isStartOrEnd: function (dir) {
-      if (dir === 'up' && this.activeId === 0) return true;
-      if (dir ==='down' && this.activeId === (this.$pages.length - 1)) return true;
-      return false;
+    animationInProgress: function () {
+      // WORKAROUND: SCROLL_DELAY added to prevent double scroll on mac trackpads
+      return !this.lastAnimationTimeStart ||
+             (Date.now() - this.lastAnimationTimeStart) <= TIMEOUT + SCROLL_DELAY;
+    },
+
+    isEdge: function (dir) {
+      return (dir === 'up' && this.activeId === 0) ||
+             (dir ==='down' && this.activeId === (this.$pages.length - 1));
     }
   });
 
