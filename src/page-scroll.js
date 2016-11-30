@@ -4,6 +4,14 @@
   var pluginName = 'pageScroll',
     defaults = {};
 
+  var WHEEL_EVENTS = [
+    'mousewheel.' + pluginName,
+    'DOMMouseScroll.' + pluginName,
+    'MozMousePixelScroll.' + pluginName
+  ].join(',');
+
+  var TIMEOUT = 1000;
+
   // The actual plugin constructor
   function Plugin(el, options) {
     this.$el = $(el);
@@ -16,25 +24,32 @@
     // this.settings = $.extend({}, defaults, options);
 
     this.init();
-    this.bindEvents();
   }
 
   $.extend(Plugin.prototype, {
     init: function () {
-      var plugin = this;
-
-      this.activePage = 0;
+      this.activeId = 0;
+      this.activeSectionPosition = 0;
+      this.$activeSection = $('[data-section-id="' + this.activeId + '"');
       this.vpHeight = this.$win.height();
+
+      this.buildHTML();
+      this.bindEvents();
+    },
+
+    buildHTML: function () {
+      var plugin = this;
 
       this.$body.css({
         'overflow': 'hidden',
         'height': '100%'
       });
 
-      this.$el.addClass('page-scroll-section');
+      this.$el.addClass('page-scroll-container');
+      this.$el.css({ 'transition': 'all ' + TIMEOUT + 'ms ease' });
 
       this.$pages.each(function (i, page) {
-        $(page).attr('data-id', i);
+        $(page).attr('data-section-id', i);
 
         if ($(page).height() > plugin.vpHeight) {
           $(page).addClass('scrollable');
@@ -49,7 +64,62 @@
     },
 
     bindEvents: function () {
+      this.$doc.on(WHEEL_EVENTS, this.handler.bind(this));
+    },
 
+    unbindEvent: function () {
+      this.$doc.off(WHEEL_EVENTS);
+    },
+
+    handler: function (e) {
+      var wheelDelta = e.originalEvent.deltaY || e.originalEvent.detail || e.originalEvent.wheelDelta;
+      var dir = this.getDirection(wheelDelta);
+
+      if (this.isStartOrEnd(dir)) {
+        return;
+      }
+
+      this.navigate(dir);
+      this.setActive(dir);
+
+      // WAIT FOR ANIMATION
+      this.unbindEvent();
+      setTimeout(this.bindEvents.bind(this), TIMEOUT);
+      console.log(e, wheelDelta);
+    },
+
+    getDirection: function (wheelDelta) {
+      if (wheelDelta > 0){
+        return 'down'
+      } else {
+        return 'up'
+      }
+    },
+
+    navigate: function (dir) {
+      this.activeSectionPosition = dir === 'down' ? (
+        this.activeSectionPosition + this.vpHeight
+      ) : (
+        this.activeSectionPosition - this.vpHeight
+      );
+
+      this.$el.css({
+        'transform': 'translate3d(0px, -' + this.activeSectionPosition + 'px, 0px)'
+      });
+    },
+
+    setActive: function (dir) {
+      dir === 'down' ? (
+        this.activeId++
+      ) : (
+        this.activeId--
+      );
+    },
+
+    isStartOrEnd: function (dir) {
+      if (dir === 'up' && this.activeId === 0) return true;
+      if (dir ==='down' && this.activeId === (this.$pages.length - 1)) return true;
+      return false;
     }
   });
 

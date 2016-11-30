@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="../bower_components/jquery/dist/jquery.js"></script>
+  <script src="../src/swipe.js"></script>
+  <style>
+    #test { width: 400px; height: 400px; margin: 0 auto; border: 1px solid; background-color: gray;
+      font-size:30px; text-align: center; line-height:400px; }
+  </style>
+</head>
+<body>
+  <div id="test"></div>
+
+<script>
+  var el = $('#test');
+
+  el.swipe().on('swipeLeft', handler);
+  el.swipe().on('swipeRight', handler);
+  el.swipe().on('swipeUp', handler);
+  el.swipe().on('swipeBottom', handler);
+
+
+  function handler(e) {
+    el.text(e.type);
+    console.log(e.type);
+  }
+
+</script>
+</body>
+</html>
