@@ -93,13 +93,11 @@
 
     bindEvents: function () {
       this.$doc.on(WHEEL_EVENTS, this.scrollHandler.bind(this));
-      this.$el.swipeEvent().on('swipe', this.scrollHandler.bind(this));
+      this.$el.swipeEvents().on('swipe', this.scrollHandler.bind(this));
       this.$nav.find('.page-scroll-nav-link').on('click', this.navHandler.bind(this))
     },
 
     scrollHandler: function (e) {
-      console.log(e.swipeDeltaY);
-      console.log(e.originalEvent && e.originalEvent.deltaY)
       var wheelDelta = (e.originalEvent && e.originalEvent.deltaY) || e.swipeDeltaY,
           dir = this.getDirection(wheelDelta),
           idToMove;
