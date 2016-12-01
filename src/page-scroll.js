@@ -1,6 +1,8 @@
 ;(function ($, window, document, undefined) {
   'use strict';
 
+  // TODO: responsiveness and normal scroll elements
+  // TODO: mobile support
   // TODO: - webpack it
   // TODO: add settings
 
@@ -29,7 +31,6 @@
     this.$win = $(window);
     this.$pages = this.$el.find('.page');
 
-    // TODO: add settings uncomment
     // this.settings = $.extend({}, defaults, options);
 
     this.init();
@@ -50,9 +51,7 @@
     buildHTML: function () {
       var plugin = this;
 
-      this.$body.css({
-        'overflow': 'hidden'
-      });
+      this.$body.css({'overflow': 'hidden'});
 
       this.$el.addClass('page-scroll-container');
       this.$el.css({ 'transition': 'all ' + ANIMATION_TIMEOUT + 'ms ease' });
@@ -93,16 +92,15 @@
     },
 
     bindEvents: function () {
-      this.$doc.on('wheel', this.scrollHandler.bind(this));
+      this.$doc.on(WHEEL_EVENTS, this.scrollHandler.bind(this));
+      this.$el.swipeEvent().on('swipe', this.scrollHandler.bind(this));
       this.$nav.find('.page-scroll-nav-link').on('click', this.navHandler.bind(this))
     },
 
-    unbindEvents: function () {
-      this.$doc.off(WHEEL_EVENTS);
-    },
-
     scrollHandler: function (e) {
-      var wheelDelta = e.originalEvent.deltaY,
+      console.log(e.swipeDeltaY);
+      console.log(e.originalEvent && e.originalEvent.deltaY)
+      var wheelDelta = (e.originalEvent && e.originalEvent.deltaY) || e.swipeDeltaY,
           dir = this.getDirection(wheelDelta),
           idToMove;
 

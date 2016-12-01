@@ -19,6 +19,8 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "^3.1.1"
+    "jquery": "^3.1.1",
+    "swipe-events": "jq-swipe-events#^0.0.3",
+    "jq-swipe-events": "^0.0.3"
   }
 }
