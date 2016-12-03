@@ -6,6 +6,7 @@
   // TODO: - webpack it
   // TODO: add settings
 
+  // DO i need it? check on testing
   var helpers = {
     isMac: function () {
       return navigator.platform.toUpperCase().indexOf('MAC')>=0;
@@ -20,6 +21,8 @@
     'DOMMouseScroll.' + pluginName,
     'MozMousePixelScroll.' + pluginName
   ].join(',');
+
+  var SCROLLABLE_CLASS = 'page-scroll-scrollable';
 
   var ANIMATION_TIMEOUT = 600, SCROLL_DELAY = helpers.isMac() ? 600 : 0;
 
@@ -39,9 +42,9 @@
   $.extend(Plugin.prototype, {
     init: function () {
       this.activeId = 0;
-      this.$activeSection = $('[data-section-id="' + this.activeId + '"');
       this.vpHeight = this.$win.height();
       this.lastAnimationTimeStart = 0;
+      this.lastScrollPoistion = 0;
 
       this.buildHTML();
       this.buildNav();
@@ -56,21 +59,24 @@
       this.$el.addClass('page-scroll-container');
       this.$el.css({ 'transition': 'all ' + ANIMATION_TIMEOUT + 'ms ease' });
 
-      this.$pages.each(function (i, page) {
-        $(page)
-          .css({'min-height': this.vpHeight})
+      this.$pages
+        .css({'min-height': this.vpHeight})
+        .wrap('<section class="page-scroll-section">');
+
+      this.$sections = $('.page-scroll-section');
+
+      this.$sections.each(function (i, section) {
+        $(section)
           .attr('data-section-id', i);
 
-        if ($(page).height() > plugin.vpHeight) {
-          $(page).addClass('scrollable');
+        if ($(section).height() > plugin.vpHeight) {
+          $(section)
+            .addClass(SCROLLABLE_CLASS);
         }
       }.bind(this));
 
-      this.$pages
-        .wrap('<div class="page-scroll-section">');
-
-      this.$sections = $('.page-scroll-section');
       this.$sections.css({ 'height': this.vpHeight + 'px' });
+      this.$activeSection = $('[data-section-id="' + this.activeId + '"');
     },
 
     buildNav: function () {
@@ -94,19 +100,34 @@
     bindEvents: function () {
       this.$doc.on(WHEEL_EVENTS, this.scrollHandler.bind(this));
       this.$el.swipeEvents().on('swipe', this.scrollHandler.bind(this));
+      this.$sections.on('scroll', this.sectionScrollHandler.bind(this));
       this.$nav.find('.page-scroll-nav-link').on('click', this.navHandler.bind(this))
     },
 
     scrollHandler: function (e) {
       var wheelDelta = (e.originalEvent && e.originalEvent.deltaY) || e.swipeDeltaY,
-          dir = this.getDirection(wheelDelta),
-          idToMove;
+          dir = this.getWheelDirection(wheelDelta),
+          nextId;
 
-      if (this.isEdge(dir) || this.animationInProgress()) return;
+      if (this.isEdge(dir) || this.animationInProgress() ||
+        this.$activeSection.hasClass(SCROLLABLE_CLASS)) return;
 
       this.lastAnimationTimeStart = Date.now();
-      idToMove = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
-      this.moveTo(idToMove);
+      nextId = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
+      this.moveTo(nextId);
+    },
+
+    sectionScrollHandler: function (e) {
+      var dir = this.getScrollDirection(this.$activeSection.scrollTop()),
+          nextId;
+
+      if (!$(e.target).hasClass(SCROLLABLE_CLASS) || this.animationInProgress()) return;
+
+      if (this.isSectionEdge(dir) && !this.isEdge(dir)) {
+        this.lastAnimationTimeStart = Date.now();
+        nextId = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
+        this.moveTo(nextId);
+      }
     },
 
     navHandler: function (e) {
@@ -120,9 +141,26 @@
       this.$activeSection.addClass('active');
     },
 
-    getDirection: function (wheelDelta) {
+    getWheelDirection: function (wheelDelta) {
       if (wheelDelta > 0) return 'down';
       if (wheelDelta < 0) return 'up';
+    },
+
+    getScrollDirection: function (scrollPosition) {
+      var dir;
+      if (this.lastScrollPoistion > scrollPosition) {
+        dir = 'up';
+      } else {
+        dir = 'down';
+      }
+      this.lastScrollPoistion = scrollPosition;
+      return dir;
+    },
+
+    isSectionEdge: function (dir) {
+      return (dir === 'down' &&  this.$activeSection.scrollTop() ===
+             (this.$activeSection[0].scrollHeight - this.$activeSection.height())) ||
+             (dir === 'up' && this.$activeSection.scrollTop() === 0)
     },
 
     moveTo: function (id) {

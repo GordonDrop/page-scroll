@@ -2,7 +2,7 @@
   transform: translate3d(0px, 0px, 0px); height: 100%; }
 
 .page-scroll-section { position: relative; height: 100%; overflow: auto; }
-
+.page-scroll-scrollable { overflow-y: scroll; }
 .page-scroll-inner { min-height: 100%; }
 
 .page-scroll-nav { position: fixed; top: 10px; left: 10px; }
