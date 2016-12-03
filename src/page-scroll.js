@@ -23,6 +23,7 @@
   ].join(',');
 
   var SCROLLABLE_CLASS = 'page-scroll-scrollable';
+  var SWIPABLE_CLASS = 'page-scroll-swipeable';
 
   var ANIMATION_TIMEOUT = 600, SCROLL_DELAY = helpers.isMac() ? 600 : 0;
 
@@ -88,13 +89,12 @@
       this.$sections = $('.page-scroll-section');
 
       this.$sections.each(function (i, section) {
-        $(section)
-          .attr('data-section-id', i);
+        var $section = $(section);
+        var sectionClass = $section.height() > plugin.vpHeight ? SCROLLABLE_CLASS : SWIPABLE_CLASS;
 
-        if ($(section).height() > plugin.vpHeight) {
-          $(section)
-            .addClass(SCROLLABLE_CLASS);
-        }
+        $section
+          .addClass(sectionClass)
+          .attr('data-section-id', i);
       }.bind(this));
 
       this.$sections.css({ 'height': this.vpHeight + 'px' });
@@ -119,20 +119,22 @@
     },
 
     bindEvents: function () {
-      this.$doc.on(WHEEL_EVENTS, this.scrollHandler.bind(this));
-      this.$el.swipeEvents().on('swipe', this.scrollHandler.bind(this));
-      this.$sections.on('scroll', this.sectionScrollHandler.bind(this));
+      this.$el.find('.' + SWIPABLE_CLASS).on(WHEEL_EVENTS, this.scrollHandler.bind(this));
+      this.$el.find('.' + SWIPABLE_CLASS).on('swipe', this.scrollHandler.bind(this));
+      this.$el.find('.' + SCROLLABLE_CLASS).on('scroll', this.sectionScrollHandler.bind(this));
       this.$nav.find('.page-scroll-nav-link').on('click', this.navHandler.bind(this))
     },
 
+    unbindEvents: function () {
+
+    },
+
     scrollHandler: function (e) {
-      var active = this.getActive(),
-          wheelDelta = (e.originalEvent && e.originalEvent.deltaY) || e.swipeDeltaY,
+      var wheelDelta = (e.originalEvent && e.originalEvent.deltaY) || e.swipeDeltaY,
           dir = this.getWheelDirection(wheelDelta),
           nextId;
 
-      if (this.isEdge(dir) || this.animationInProgress() ||
-        active.hasClass(SCROLLABLE_CLASS)) return;
+      if (this.isEdge(dir) || this.animationInProgress()) return;
 
       this.lastAnimationTimeStart = Date.now();
       nextId = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
@@ -140,12 +142,12 @@
     },
 
     sectionScrollHandler: function (e) {
+
       var active = this.getActive(),
           dir = this.getScrollDirection(active[0].scrollTop),
           nextId;
 
-      if (!active.hasClass(SCROLLABLE_CLASS) || this.animationInProgress()) return;
-
+      if (this.animationInProgress()) return;
       if (this.isSectionEdge(dir) && !this.isEdge(dir)) {
         this.lastAnimationTimeStart = Date.now();
         nextId = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
