@@ -26,6 +26,28 @@
 
   var ANIMATION_TIMEOUT = 600, SCROLL_DELAY = helpers.isMac() ? 600 : 0;
 
+  var SECTION_TEMPLATE =
+    '<section class="page-scroll-section baron baron__root baron__clipper _macosx">' +
+      '<div class="baron__scroller page">' +
+      '</div>' +
+
+      '<div class="baron__track">' +
+        '<div class="baron__free">' +
+          '<div class="baron__bar"></div>' +
+        '</div>' +
+      '</div>' +
+    '</section>';
+
+  var SECTION_CLASS = 'page-scroll-section';
+
+  var BARON_CONFIG = {
+    root: '.baron',
+    scroller: '.baron__scroller',
+    bar: '.baron__bar',
+    scrollingCls: '_scrolling',
+    draggingCls: '_dragging'
+  };
+
   // The actual plugin constructor
   function Plugin(el, options) {
     this.$el = $(el);
@@ -76,7 +98,6 @@
       }.bind(this));
 
       this.$sections.css({ 'height': this.vpHeight + 'px' });
-      this.$activeSection = $('[data-section-id="' + this.activeId + '"');
     },
 
     buildNav: function () {
@@ -105,12 +126,13 @@
     },
 
     scrollHandler: function (e) {
-      var wheelDelta = (e.originalEvent && e.originalEvent.deltaY) || e.swipeDeltaY,
+      var active = this.getActive(),
+          wheelDelta = (e.originalEvent && e.originalEvent.deltaY) || e.swipeDeltaY,
           dir = this.getWheelDirection(wheelDelta),
           nextId;
 
       if (this.isEdge(dir) || this.animationInProgress() ||
-        this.$activeSection.hasClass(SCROLLABLE_CLASS)) return;
+        active.hasClass(SCROLLABLE_CLASS)) return;
 
       this.lastAnimationTimeStart = Date.now();
       nextId = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
@@ -118,10 +140,11 @@
     },
 
     sectionScrollHandler: function (e) {
-      var dir = this.getScrollDirection(this.$activeSection.scrollTop()),
+      var active = this.getActive(),
+          dir = this.getScrollDirection(active[0].scrollTop),
           nextId;
 
-      if (!$(e.target).hasClass(SCROLLABLE_CLASS) || this.animationInProgress()) return;
+      if (!active.hasClass(SCROLLABLE_CLASS) || this.animationInProgress()) return;
 
       if (this.isSectionEdge(dir) && !this.isEdge(dir)) {
         this.lastAnimationTimeStart = Date.now();
@@ -134,11 +157,12 @@
       if (!$(e.target).is('a')) return;
 
       e.preventDefault();
-      var id = parseInt($(e.target).attr('data-section-id'));
-      this.moveTo(id);
+      var id = parseInt($(e.target).attr('data-section-id')),
+          active = this.getActive();
+        this.moveTo(id);
 
       this.$nav.find('.active').removeClass('active');
-      this.$activeSection.addClass('active');
+      active.addClass('active');
     },
 
     getWheelDirection: function (wheelDelta) {
@@ -158,22 +182,19 @@
     },
 
     isSectionEdge: function (dir) {
-      return (dir === 'down' &&  this.$activeSection.scrollTop() ===
-             (this.$activeSection[0].scrollHeight - this.$activeSection.height())) ||
-             (dir === 'up' && this.$activeSection.scrollTop() === 0)
+      var active = this.getActive();
+      return (dir === 'down' && active[0].scrollTop ===
+             (active[0].scrollHeight - active.height())) ||
+             (dir === 'up' && active[0].scrollTop === 0);
     },
 
     moveTo: function (id) {
       this.activeId = id;
-      this.$activeSection = $('[data-section-id="' + this.activeId + '"]');
 
       var newPosition = this.vpHeight * this.activeId;
       this.$el.css({
         'transform': 'translate3d(0px, -' + newPosition + 'px, 0px)'
       });
-
-      this.$nav.find('.active').removeClass('active');
-      this.$activeSection.addClass('active');
     },
 
     animationInProgress: function () {
@@ -184,6 +205,10 @@
     isEdge: function (dir) {
       return (dir === 'up' && this.activeId === 0) ||
              (dir ==='down' && this.activeId === (this.$pages.length - 1));
+    },
+
+    getActive: function () {
+      return this.$el.find('[data-section-id="' + this.activeId + '"]');
     }
   });
 
