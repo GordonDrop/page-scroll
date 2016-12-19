@@ -53,7 +53,6 @@
   function Plugin(el, options) {
     this.$el = $(el);
     this.$body = $('body');
-    this.$doc = $(document);
     this.$win = $(window);
     this.$pages = this.$el.find('.page');
 
@@ -82,9 +81,16 @@
       this.$el.addClass('page-scroll-container');
       this.$el.css({ 'transition': 'all ' + ANIMATION_TIMEOUT + 'ms ease' });
 
-      this.$pages
-        .css({'min-height': this.vpHeight})
-        .wrap('<section class="page-scroll-section">');
+      this.$pages.each(function (_i, page) {
+        var sectionNode = $(SECTION_TEMPLATE),
+            content = $(page).html();
+
+        sectionNode.find('.page')
+          .addClass($(page).attr('class'))
+          .html(content);
+
+        $(page).replaceWith(sectionNode);
+      }, this);
 
       this.$sections = $('.page-scroll-section');
 
@@ -94,10 +100,9 @@
 
         $section
           .addClass(sectionClass)
+          .css({ 'height': this.vpHeight + 'px' })
           .attr('data-section-id', i);
       }.bind(this));
-
-      this.$sections.css({ 'height': this.vpHeight + 'px' });
     },
 
     buildNav: function () {
@@ -141,9 +146,8 @@
       this.moveTo(nextId);
     },
 
-    sectionScrollHandler: function (e) {
-
-      var active = this.getActive(),
+    sectionScrollHandler: function () {
+      var active = this.getActiveSection(),
           dir = this.getScrollDirection(active[0].scrollTop),
           nextId;
 
@@ -159,12 +163,9 @@
       if (!$(e.target).is('a')) return;
 
       e.preventDefault();
-      var id = parseInt($(e.target).attr('data-section-id')),
-          active = this.getActive();
-        this.moveTo(id);
+      var id = parseInt($(e.target).attr('data-section-id'));
 
-      this.$nav.find('.active').removeClass('active');
-      active.addClass('active');
+      this.moveTo(id);
     },
 
     getWheelDirection: function (wheelDelta) {
@@ -183,13 +184,6 @@
       return dir;
     },
 
-    isSectionEdge: function (dir) {
-      var active = this.getActive();
-      return (dir === 'down' && active[0].scrollTop ===
-             (active[0].scrollHeight - active.height())) ||
-             (dir === 'up' && active[0].scrollTop === 0);
-    },
-
     moveTo: function (id) {
       this.activeId = id;
 
@@ -197,6 +191,9 @@
       this.$el.css({
         'transform': 'translate3d(0px, -' + newPosition + 'px, 0px)'
       });
+
+      this.$nav.find('.active').removeClass('active');
+      this.$nav.find('[data-section-id=' + this.activeId  + ']').addClass('active');
     },
 
     animationInProgress: function () {
@@ -204,12 +201,19 @@
       return (Date.now() - this.lastAnimationTimeStart) <= ANIMATION_TIMEOUT + SCROLL_DELAY;
     },
 
+    isSectionEdge: function (dir) {
+      var active = this.getActiveSection();
+      return (dir === 'down' && active[0].scrollTop ===
+        (active[0].scrollHeight - active.height())) ||
+        (dir === 'up' && active[0].scrollTop === 0);
+    },
+
     isEdge: function (dir) {
       return (dir === 'up' && this.activeId === 0) ||
              (dir ==='down' && this.activeId === (this.$pages.length - 1));
     },
 
-    getActive: function () {
+    getActiveSection: function () {
       return this.$el.find('[data-section-id="' + this.activeId + '"]');
     }
   });

@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "jquery": "^3.1.1",
-    "jq-swipe-events": "latest"
+    "jq-swipe-events": "latest",
+    "baron": "^2.2.3"
   }
 }
