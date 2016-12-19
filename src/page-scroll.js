@@ -22,6 +22,10 @@
     'MozMousePixelScroll.' + pluginName
   ].join(',');
 
+  var SWIPE_EVENT = 'swipe.' + pluginName;
+  var CLICK_EVENT = 'click.' + pluginName;
+  var SCROLL_EVENT = 'scroll.' + pluginName;
+
   var SCROLLABLE_CLASS = 'page-scroll-scrollable';
   var SWIPABLE_CLASS = 'page-scroll-swipeable';
 
@@ -68,7 +72,7 @@
   $.extend(Plugin.prototype, {
     init: function () {
       this.activeId = 0;
-      this.vpHeight =  window.innerHeight ? window.innerHeight : $(window).height();
+      this.vpHeight =  window.innerHeight ? window.innerHeight : this.$win.height(); // iOS workaround
       this.lastAnimationTimeStart = 0;
       this.lastScrollPoistion = 0;
 
@@ -78,16 +82,22 @@
     },
 
     buildHTML: function () {
-      var plugin = this;
-
       this.$body.css({'overflow': 'hidden'});
 
       this.$el.addClass('page-scroll-container');
       this.$el.css({ 'transition': 'all ' + ANIMATION_TIMEOUT + 'ms ease' });
 
+      this.buildSections();
+      this.initSections();
+
+      this.$sections
+        .baron(BARON_CONFIG);
+    },
+
+    buildSections: function () {
       this.$pages.each(function (_i, page) {
         var sectionNode = $(SECTION_TEMPLATE),
-            content = $(page).html();
+          content = $(page).html();
 
         sectionNode.find('.page')
           .addClass($(page).attr('class'))
@@ -97,19 +107,18 @@
       }, this);
 
       this.$sections = $('.page-scroll-section');
+    },
 
+    initSections: function () {
       this.$sections.each(function (i, section) {
         var $section = $(section);
-        var sectionClass = $section.height() > this.vpHeight ? SCROLLABLE_CLASS : SWIPABLE_CLASS;
+        var sectionClass = $section.find('.page').height() > this.vpHeight ? SCROLLABLE_CLASS : SWIPABLE_CLASS;
 
         $section
           .addClass(sectionClass)
           .css({ 'height': this.vpHeight + 'px' })
           .attr('data-section-id', i);
       }.bind(this));
-
-      this.$el.find('.' + SCROLLABLE_CLASS)
-        .baron(BARON_CONFIG);
     },
 
     buildNav: function () {
@@ -130,15 +139,22 @@
       this.$body.append(this.$nav);
     },
 
-    bindEvents: function () {
-      this.$el.find('.' + SWIPABLE_CLASS).on(WHEEL_EVENTS, this.scrollHandler.bind(this));
-      this.$el.find('.' + SWIPABLE_CLASS).on('swipe', this.scrollHandler.bind(this));
-      this.$el.find('.' + SCROLLABLE_CLASS + ' .baron__scroller').on('scroll', this.sectionScrollHandler.bind(this));
-      this.$nav.find('.page-scroll-nav-link').on('click', this.navHandler.bind(this))
+    bindEvents: function() {
+      this.bindNavEvents();
+      this.$win.on('resize orientationchange', this.resizeHandler.bind(this));
+      this.$nav.find('.page-scroll-nav-link').on(CLICK_EVENT, this.navHandler.bind(this));
     },
 
-    unbindEvents: function () {
+    bindNavEvents: function () {
+      this.$el.find('.' + SWIPABLE_CLASS).on(WHEEL_EVENTS, this.scrollHandler.bind(this));
+      this.$el.find('.' + SWIPABLE_CLASS).on(SWIPE_EVENT, this.scrollHandler.bind(this));
+      this.$el.find('.' + SCROLLABLE_CLASS + ' .baron__scroller').on(SCROLL_EVENT, this.sectionScrollHandler.bind(this));
+    },
 
+    unbindNavEvents: function () {
+      this.$el.find('.' + SWIPABLE_CLASS).off(WHEEL_EVENTS);
+      this.$el.find('.' + SWIPABLE_CLASS).off(SWIPE_EVENT);
+      this.$el.find('.' + SCROLLABLE_CLASS + ' .baron__scroller').off(SCROLL_EVENT);
     },
 
     scrollHandler: function (e) {
@@ -150,6 +166,7 @@
 
       this.lastAnimationTimeStart = Date.now();
       nextId = dir === 'up' ? this.activeId - 1 : this.activeId + 1;
+
       this.moveTo(nextId);
     },
 
@@ -173,6 +190,16 @@
       var id = parseInt($(e.target).attr('data-section-id'));
 
       this.moveTo(id);
+    },
+
+    resizeHandler: function (e) {
+      this.unbindNavEvents();
+
+      this.vpHeight =  window.innerHeight ? window.innerHeight : this.$win.height(); // iOS workaround
+      this.$sections.removeClass([SCROLLABLE_CLASS, SWIPABLE_CLASS].join(' '));
+
+      this.initSections();
+      this.bindNavEvents();
     },
 
     getWheelDirection: function (wheelDelta) {
