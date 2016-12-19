@@ -133,7 +133,7 @@
     bindEvents: function () {
       this.$el.find('.' + SWIPABLE_CLASS).on(WHEEL_EVENTS, this.scrollHandler.bind(this));
       this.$el.find('.' + SWIPABLE_CLASS).on('swipe', this.scrollHandler.bind(this));
-      this.$el.find('.' + SCROLLABLE_CLASS).on('scroll', this.sectionScrollHandler.bind(this));
+      this.$el.find('.' + SCROLLABLE_CLASS + ' .baron__scroller').on('scroll', this.sectionScrollHandler.bind(this));
       this.$nav.find('.page-scroll-nav-link').on('click', this.navHandler.bind(this))
     },
 
@@ -154,8 +154,8 @@
     },
 
     sectionScrollHandler: function (e) {
-      var active = this.getActiveSection(),
-          dir = this.getScrollDirection(active[0].scrollTop),
+      var activePage = e.target,
+          dir = this.getScrollDirection(activePage.scrollTop),
           nextId;
 
       if (this.animationInProgress()) return;
@@ -209,9 +209,9 @@
     },
 
     isSectionEdge: function (dir) {
-      var active = this.getActiveSection();
-      return (dir === 'down' && active[0].scrollTop === (active[0].scrollHeight - active.find('.page').height())) ||
-        (dir === 'up' && active[0].scrollTop === 0);
+      var active = this.getActiveSection().find('.baron__scroller')[0];
+      return (dir === 'down' && active.scrollTop === (active.scrollHeight - active.offsetHeight)) ||
+        (dir === 'up' && active.scrollTop === 0);
     },
 
     isEdge: function (dir) {
