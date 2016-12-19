@@ -1,11 +1,6 @@
 ;(function ($, window, document, undefined) {
   'use strict';
 
-  // TODO: responsiveness and normal scroll elements
-  // TODO: mobile support
-  // TODO: - webpack it
-  // TODO: add settings
-
   // DO i need it? check on testing
   var helpers = {
     isMac: function () {
@@ -85,7 +80,7 @@
       this.$body.css({'overflow': 'hidden'});
 
       this.$el.addClass('page-scroll-container');
-      this.$el.css({ 'transition': 'all ' + ANIMATION_TIMEOUT + 'ms ease' });
+      this.addAnimation();
 
       this.buildSections();
       this.initSections();
@@ -141,7 +136,7 @@
 
     bindEvents: function() {
       this.bindNavEvents();
-      this.$win.on('resize orientationchange', this.resizeHandler.bind(this));
+      this.$win.on('resize', this.resizeHandler.bind(this));
       this.$nav.find('.page-scroll-nav-link').on(CLICK_EVENT, this.navHandler.bind(this));
     },
 
@@ -200,11 +195,23 @@
 
       this.initSections();
       this.bindNavEvents();
+      this.removeAnimation();
+      this.moveTo(this.activeId);
+
+      setTimeout(this.addAnimation.bind(this), 0);
     },
 
     getWheelDirection: function (wheelDelta) {
       if (wheelDelta > 0) return 'down';
       if (wheelDelta < 0) return 'up';
+    },
+
+    addAnimation: function () {
+      this.$el.css({ 'transition': 'all ' + ANIMATION_TIMEOUT + 'ms ease' });
+    },
+
+    removeAnimation: function () {
+      this.$el.css({ 'transition': 'none' });
     },
 
     getScrollDirection: function (scrollPosition) {
