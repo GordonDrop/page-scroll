@@ -29,7 +29,8 @@
 
   var SECTION_TEMPLATE =
     '<section class="page-scroll-section baron baron__root baron__clipper _macosx">' +
-      '<div class="baron__scroller page">' +
+      '<div class="baron__scroller">' +
+        '<div class="container page"></div>' +
       '</div>' +
 
       '<div class="baron__track">' +
@@ -45,8 +46,11 @@
     root: '.baron',
     scroller: '.baron__scroller',
     bar: '.baron__bar',
-    scrollingCls: '_scrolling',
-    draggingCls: '_dragging'
+    scrollingCls: '_scrolling'
+  };
+
+  var BARON_CONTROLS_CONFIG = {
+    track: '.baron__track'
   };
 
   // The actual plugin constructor
@@ -96,13 +100,16 @@
 
       this.$sections.each(function (i, section) {
         var $section = $(section);
-        var sectionClass = $section.height() > plugin.vpHeight ? SCROLLABLE_CLASS : SWIPABLE_CLASS;
+        var sectionClass = $section.height() > this.vpHeight ? SCROLLABLE_CLASS : SWIPABLE_CLASS;
 
         $section
           .addClass(sectionClass)
           .css({ 'height': this.vpHeight + 'px' })
           .attr('data-section-id', i);
       }.bind(this));
+
+      this.$el.find('.' + SCROLLABLE_CLASS)
+        .baron(BARON_CONFIG);
     },
 
     buildNav: function () {
@@ -146,7 +153,7 @@
       this.moveTo(nextId);
     },
 
-    sectionScrollHandler: function () {
+    sectionScrollHandler: function (e) {
       var active = this.getActiveSection(),
           dir = this.getScrollDirection(active[0].scrollTop),
           nextId;
@@ -203,8 +210,7 @@
 
     isSectionEdge: function (dir) {
       var active = this.getActiveSection();
-      return (dir === 'down' && active[0].scrollTop ===
-        (active[0].scrollHeight - active.height())) ||
+      return (dir === 'down' && active[0].scrollTop === (active[0].scrollHeight - active.find('.page').height())) ||
         (dir === 'up' && active[0].scrollTop === 0);
     },
 
