@@ -68,7 +68,7 @@
   $.extend(Plugin.prototype, {
     init: function () {
       this.activeId = 0;
-      this.vpHeight = this.$win.height();
+      this.vpHeight =  window.innerHeight ? window.innerHeight : $(window).height();
       this.lastAnimationTimeStart = 0;
       this.lastScrollPoistion = 0;
 
@@ -210,6 +210,7 @@
 
     isSectionEdge: function (dir) {
       var active = this.getActiveSection().find('.baron__scroller')[0];
+
       return (dir === 'down' && active.scrollTop === (active.scrollHeight - active.offsetHeight)) ||
         (dir === 'up' && active.scrollTop === 0);
     },
