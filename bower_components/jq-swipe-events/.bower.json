@@ -1,0 +1,37 @@
+{
+  "name": "jq-swipe-events",
+  "authors": [
+    "ksimanov <ksimanov@ronasit.com>"
+  ],
+  "url": "https://github.com/GordonDrop/jq-swipe-events.git",
+  "description": "Swipe events jquery based",
+  "main": "jq-swipe-events.js",
+  "keywords": [
+    "swipe",
+    "touch",
+    "events",
+    "jquery"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/GordonDrop/jq-swipe-events",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "latest"
+  },
+  "version": "0.0.5",
+  "_release": "0.0.5",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.0.5",
+    "commit": "c79bb17a4f34ba647c91fb8c2c45305bc09c300e"
+  },
+  "_source": "https://github.com/GordonDrop/jq-swipe-events.git",
+  "_target": "*",
+  "_originalSource": "jq-swipe-events"
+}
